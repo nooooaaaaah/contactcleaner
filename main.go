@@ -16,6 +16,8 @@ const (
 	SEMICOLON = ";"
 	ENDLINE   = "/n"
 	COMMA     = ","
+	EQUAL     = "="
+	DUBQUAL   = "=="
 	// vCard fields
 	// standard fields
 	VERSION       = "VERSION"
@@ -130,66 +132,100 @@ func (p *Parser) NextLine() {
 func (p *Parser) Parse() (*ContactCard, error) {
 	// Parse the vCard string
 	var err error
+
 	for p.scanner.Scan() {
+		if p.error != nil {
+			return nil, p.error
+		}
+
+		if p.base64Flag {
+
+			if strings.HasSuffix(p.currentLine, EQUAL) || strings.HasSuffix(p.currentLine, DUBQUAL) {
+				p.currentCard.Photo = append(p.currentCard.Photo, p.b64BuffDaddy...)
+				p.base64Flag = false
+			} else {
+				p.b64BuffDaddy = append(p.b64BuffDaddy, p.currentLine...)
+			}
+			continue
+		}
+
 		p.NextLine()
 		switch {
+
 		case strings.HasPrefix(p.currentLine, Begin):
 			p.currentCard = &ContactCard{}
+
 		case strings.HasPrefix(p.currentLine, END):
 			return p.currentCard, nil
+
 		case strings.HasPrefix(p.currentLine, VERSION):
 			p.currentCard.Version = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, PRODID):
 			p.currentCard.ProdID = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, N):
 			// last; first; middle; prefix; suffix
 			p.parseName()
+
 		case strings.HasPrefix(p.currentLine, FN):
 			p.currentCard.FullName = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, BDAY):
 			p.currentCard.Birthday, err = StringtoDateParser(strings.Split(p.currentLine, COLON)[1])
 			if err != nil {
 				return nil, err
 			}
+
 		case strings.HasPrefix(p.currentLine, UID):
 			p.currentCard.UID = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, NICKNAME):
 			p.currentCard.Nickname = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, ORG):
 			p.currentCard.Organization = removeSemiColon(strings.Split(p.currentLine, COLON)[1])
+
 		case strings.HasPrefix(p.currentLine, URL):
 			p.currentCard.URL = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, NOTE):
 			p.currentCard.Notes = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, TITLE):
 			p.currentCard.Titles = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, PHOTO):
-			p.currentCard.Photos = strings.Split(p.currentLine, COLON)[1]
+			p.base64Flag = true
+			p.b64BuffDaddy = []byte(p.currentLine)
+
 		case strings.HasPrefix(p.currentLine, LOGO):
 			p.currentCard.Logos = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, CATEGORIES):
 			p.currentCard.Categories = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, IMPP):
 			p.currentCard.InstantMessaging = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, ADR):
 			p.currentCard.Addresses = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, EMAIL):
 			p.currentCard.Emails = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, SOCIALPROFILE):
 			p.currentCard.SocialProfiles = strings.Split(p.currentLine, COLON)[1]
+
 		case strings.HasPrefix(p.currentLine, TEL):
-			p.currentCard.Telephones = map[string]string{strings.Split(p.currentLine, Colon)[1]}
+			telephone := parseTelephone(p.currentLine)
+			p.currentCard.Telephones = append(p.currentCard.Telephones, telephone)
+
 		case strings.HasPrefix(p.currentLine, X):
 			p.currentCard.CustomFields = strings.Split(p.currentLine, COLON)[1]
 		}
 	}
 	return nil, nil
-}
-
-// removes trailing semicolon
-// e.g. taco; -> taco
-func removeSemiColon(s string) string {
-	return strings.TrimRight(s, SEMICOLON)
 }
 
 func (p *Parser) parseName() {
