@@ -11,41 +11,41 @@ import (
 const (
 	// delimiters
 	Begin     = "BEGIN"
-	End       = "END"
-	Colon     = ":"
-	SemiColon = ";"
-	EndLine   = "/n"
+	END       = "END"
+	COLON     = ":"
+	SEMICOLON = ";"
+	ENDLINE   = "/n"
 	COMMA     = ","
 	// vCard fields
 	// standard fields
-	Version       = "VERSION"
-	Prodid        = "PRODID"
+	VERSION       = "VERSION"
+	PRODID        = "PRODID"
 	N             = "N"
 	FN            = "FN"
-	Title         = "TITLE"
-	Photo         = "PHOTO"
-	Logo          = "LOGO"
-	Rev           = "REV"
+	TITLE         = "TITLE"
+	PHOTO         = "PHOTO"
+	LOGO          = "LOGO"
+	REV           = "REV"
 	UID           = "UID"
-	Nickname      = "NICKNAME"
-	Categories    = "CATEGORIES"
-	Impp          = "IMPP"
-	Adr           = "ADR"
+	NICKNAME      = "NICKNAME"
+	CATEGORIES    = "CATEGORIES"
+	IMPP          = "IMPP"
+	ADR           = "ADR"
 	X             = "X-"
-	Email         = "EMAIL"
-	SocialProfile = "X-SOCIALPROFILE"
-	BDay          = "BDAY"
-	Tel           = "TEL"
-	Org           = "ORG"
-	Type          = "TYPE"
-	Url           = "URL"
-	Note          = "NOTE"
-	Geo           = "GEO"
-	Role          = "ROLE"
-	Tz            = "TZ"
-	Mailer        = "MAILER"
-	Label         = "LABEL"
-	Agent         = "AGENT"
+	EMAIL         = "EMAIL"
+	SOCIALPROFILE = "X-SOCIALPROFILE"
+	BDAY          = "BDAY"
+	TEL           = "TEL"
+	ORG           = "ORG"
+	TYPE          = "TYPE"
+	URL           = "URL"
+	NOTE          = "NOTE"
+	GEO           = "GEO"
+	ROLE          = "ROLE"
+	TZ            = "TZ"
+	MAILER        = "MAILER"
+	LABEL         = "LABEL"
+	AGENT         = "AGENT"
 )
 
 type ContactCard struct {
@@ -55,7 +55,7 @@ type ContactCard struct {
 	Version          string
 	ProdID           string
 	FullName         string
-	FistName         string
+	FirstName        string
 	LastName         string
 	MiddleName       string
 	Prefix           string
@@ -135,52 +135,52 @@ func (p *Parser) Parse() (*ContactCard, error) {
 		switch {
 		case strings.HasPrefix(p.currentLine, Begin):
 			p.currentCard = &ContactCard{}
-		case strings.HasPrefix(p.currentLine, End):
+		case strings.HasPrefix(p.currentLine, END):
 			return p.currentCard, nil
-		case strings.HasPrefix(p.currentLine, Version):
-			p.currentCard.Version = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Prodid):
-			p.currentCard.ProdID = strings.Split(p.currentLine, Colon)[1]
+		case strings.HasPrefix(p.currentLine, VERSION):
+			p.currentCard.Version = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, PRODID):
+			p.currentCard.ProdID = strings.Split(p.currentLine, COLON)[1]
 		case strings.HasPrefix(p.currentLine, N):
 			// last; first; middle; prefix; suffix
 			p.parseName()
 		case strings.HasPrefix(p.currentLine, FN):
-			p.currentCard.FullName = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, BDay):
-			p.currentCard.Birthday, err = StringtoDateParser(strings.Split(p.currentLine, Colon)[1])
+			p.currentCard.FullName = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, BDAY):
+			p.currentCard.Birthday, err = StringtoDateParser(strings.Split(p.currentLine, COLON)[1])
 			if err != nil {
 				return nil, err
 			}
 		case strings.HasPrefix(p.currentLine, UID):
-			p.currentCard.UID = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Nickname):
-			p.currentCard.Nickname = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Org):
-			p.currentCard.Organization = removeSemiColon(strings.Split(p.currentLine, Colon)[1])
-		case strings.HasPrefix(p.currentLine, Url):
-			p.currentCard.URL = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Note):
-			p.currentCard.Notes = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Title):
-			p.currentCard.Titles = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Photo):
-			p.currentCard.Photos = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Logo):
-			p.currentCard.Logos = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Categories):
-			p.currentCard.Categories = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Impp):
-			p.currentCard.InstantMessaging = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Adr):
-			p.currentCard.Addresses = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Email):
-			p.currentCard.Emails = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, SocialProfile):
-			p.currentCard.SocialProfiles = strings.Split(p.currentLine, Colon)[1]
-		case strings.HasPrefix(p.currentLine, Tel):
+			p.currentCard.UID = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, NICKNAME):
+			p.currentCard.Nickname = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, ORG):
+			p.currentCard.Organization = removeSemiColon(strings.Split(p.currentLine, COLON)[1])
+		case strings.HasPrefix(p.currentLine, URL):
+			p.currentCard.URL = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, NOTE):
+			p.currentCard.Notes = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, TITLE):
+			p.currentCard.Titles = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, PHOTO):
+			p.currentCard.Photos = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, LOGO):
+			p.currentCard.Logos = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, CATEGORIES):
+			p.currentCard.Categories = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, IMPP):
+			p.currentCard.InstantMessaging = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, ADR):
+			p.currentCard.Addresses = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, EMAIL):
+			p.currentCard.Emails = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, SOCIALPROFILE):
+			p.currentCard.SocialProfiles = strings.Split(p.currentLine, COLON)[1]
+		case strings.HasPrefix(p.currentLine, TEL):
 			p.currentCard.Telephones = map[string]string{strings.Split(p.currentLine, Colon)[1]}
 		case strings.HasPrefix(p.currentLine, X):
-			p.currentCard.CustomFields = strings.Split(p.currentLine, Colon)[1]
+			p.currentCard.CustomFields = strings.Split(p.currentLine, COLON)[1]
 		}
 	}
 	return nil, nil
@@ -189,12 +189,12 @@ func (p *Parser) Parse() (*ContactCard, error) {
 // removes trailing semicolon
 // e.g. taco; -> taco
 func removeSemiColon(s string) string {
-	return strings.TrimRight(s, SemiColon)
+	return strings.TrimRight(s, SEMICOLON)
 }
 
 func (p *Parser) parseName() {
-	line := strings.Split(p.currentLine, Colon)
-	names := strings.Split(line[1], SemiColon)
+	line := strings.Split(p.currentLine, COLON)
+	names := strings.Split(line[1], SEMICOLON)
 	for i, name := range names {
 		switch i {
 		case 0:
@@ -203,7 +203,7 @@ func (p *Parser) parseName() {
 			}
 		case 1:
 			if name != "" {
-				p.currentCard.FistName = name
+				p.currentCard.FirstName = name
 			}
 		case 2:
 			if name != "" {
