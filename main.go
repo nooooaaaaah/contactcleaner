@@ -34,6 +34,7 @@ const (
 	IMPP          = "IMPP"
 	ADR           = "ADR"
 	X             = "X-"
+	ITEM          = "item"
 	EMAIL         = "EMAIL"
 	SOCIALPROFILE = "X-SOCIALPROFILE"
 	BDAY          = "BDAY"
@@ -85,7 +86,6 @@ type Item struct {
 	ItemValue  string
 }
 
-// Address represents a structured address.
 type Address struct {
 	Type    string // Type of address (home, work, etc.)
 	Street  string
@@ -96,29 +96,28 @@ type Address struct {
 	Label   string // Custom label (e.g., "Vacation Home")
 }
 
-// Email represents an email address with type.
 type EmailAddr struct {
 	Type    string
 	Address string
 }
 
-// Telephone represents a telephone number with type.
 type Telephone struct {
 	Type   string
 	Number string
 }
 
-// SocialProfile represents a social media profile.
 type SocialMediaProfile struct {
 	Type string
 	URL  string
 }
 
 type Parser struct {
-	error       error
-	currentCard *ContactCard
-	scanner     *bufio.Scanner
-	currentLine string
+	error        error
+	currentCard  *ContactCard
+	scanner      *bufio.Scanner
+	currentLine  string
+	base64Flag   bool
+	b64BuffDaddy []byte
 }
 
 func NewParser() *Parser {
@@ -258,9 +257,14 @@ func (p *Parser) parseName() {
 
 }
 
+// removes trailing semicolon
+// e.g. taco; -> taco
+func removeSemiColon(s string) string {
+	return strings.TrimRight(s, SEMICOLON)
+}
+
+// Parse the birthday string into a time.Time. (YYYY-MM-D)
 func StringtoDateParser(date string) (*time.Time, error) {
-	// Parse the birthday string
-	// The format of the birthday string is YYYY-MM-DD
 	day, err := time.Parse("2006-01-02", date)
 	if err != nil {
 		return nil, err
