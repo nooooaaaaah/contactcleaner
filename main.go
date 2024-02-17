@@ -4,6 +4,7 @@ import (
 	// Import necessary packages
 
 	"bufio"
+	"errors"
 	"strings"
 	"time"
 )
@@ -36,7 +37,7 @@ const (
 	X             = "X-"
 	ITEM          = "item"
 	EMAIL         = "EMAIL"
-	SOCIALPROFILE = "X-SOCIALPROFILE"
+	SOCIALPROFILE = "SOCIALPROFILE"
 	BDAY          = "BDAY"
 	TEL           = "TEL"
 	ORG           = "ORG"
@@ -69,8 +70,8 @@ type ContactCard struct {
 	URL              string
 	Notes            string
 	Titles           string
-	Photo            []byte
-	Logos            []byte
+	Photo            Image
+	Logos            Image
 	Categories       []string // tags
 	InstantMessaging []string
 	Addresses        []Address
@@ -78,6 +79,37 @@ type ContactCard struct {
 	SocialProfiles   []SocialMediaProfile
 	Telephones       []Telephone
 	Items            []Item
+	ExtendedFields   []XField
+}
+
+type Image interface {
+	isEncodedImage() bool
+	data() string
+}
+
+type EncodedImage string
+
+func (e EncodedImage) isEncodedImage() bool {
+	return true
+}
+
+func (e EncodedImage) data() string {
+	return string(e)
+}
+
+type ImageURL string
+
+func (i ImageURL) isEncodedImage() bool {
+	return false
+}
+
+func (i ImageURL) data() string {
+	return string(i)
+}
+
+type XField struct {
+	Type string
+	Data string
 }
 
 type Item struct {
@@ -102,7 +134,7 @@ type EmailAddr struct {
 }
 
 type Telephone struct {
-	Type   string
+	Type   []string
 	Number string
 }
 
@@ -164,7 +196,6 @@ func (p *Parser) Parse() (*ContactCard, error) {
 			p.currentCard.ProdID = strings.Split(p.currentLine, COLON)[1]
 
 		case strings.HasPrefix(p.currentLine, N):
-			// last; first; middle; prefix; suffix
 			p.parseName()
 
 		case strings.HasPrefix(p.currentLine, FN):
