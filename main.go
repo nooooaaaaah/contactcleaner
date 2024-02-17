@@ -168,21 +168,14 @@ func (p *Parser) Parse() (*ContactCard, error) {
 		if p.error != nil {
 			return nil, p.error
 		}
-
+		// If we are in the middle of a base64 encoded block, keep reading until we find the end
 		if p.base64Flag {
-
-			if strings.HasSuffix(p.currentLine, EQUAL) || strings.HasSuffix(p.currentLine, DUBQUAL) {
-				p.currentCard.Photo = append(p.currentCard.Photo, p.b64BuffDaddy...)
-				p.base64Flag = false
-			} else {
-				p.b64BuffDaddy = append(p.b64BuffDaddy, p.currentLine...)
-			}
+			p.parseBase64()
 			continue
 		}
-
 		p.NextLine()
-		switch {
 
+		switch {
 		case strings.HasPrefix(p.currentLine, Begin):
 			p.currentCard = &ContactCard{}
 
@@ -227,39 +220,44 @@ func (p *Parser) Parse() (*ContactCard, error) {
 
 		case strings.HasPrefix(p.currentLine, PHOTO):
 			p.base64Flag = true
+			// check if url or base64
 			p.b64BuffDaddy = []byte(p.currentLine)
 
-		case strings.HasPrefix(p.currentLine, LOGO):
-			p.currentCard.Logos = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, CATEGORIES):
-			p.currentCard.Categories = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, IMPP):
-			p.currentCard.InstantMessaging = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, ADR):
-			p.currentCard.Addresses = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, EMAIL):
-			p.currentCard.Emails = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, SOCIALPROFILE):
-			p.currentCard.SocialProfiles = strings.Split(p.currentLine, COLON)[1]
-
-		case strings.HasPrefix(p.currentLine, TEL):
-			telephone := parseTelephone(p.currentLine)
-			p.currentCard.Telephones = append(p.currentCard.Telephones, telephone)
-
-		case strings.HasPrefix(p.currentLine, X):
-			p.currentCard.CustomFields = strings.Split(p.currentLine, COLON)[1]
 		}
 	}
 	return nil, nil
 }
 
+/*
+Takes into account all the parameters
+eg. TEL;TYPE=WORK,VOICE:(111) 555-1212
+Splits the field into the correct type
+*/
+func parseLine(currentLine string) ([]string, string, error) {
+	line := strings.SplitN(currentLine, COLON, 2)
+	if len(line) < 2 {
+		return nil, "", errors.New("Invalid line: " + currentLine)
+	}
+	// Split the parameters
+	params := strings.Split(line[0], SEMICOLON)
+	value := line[1]
+	return params, value, nil
+}
+
+func (p *Parser) parseBase64() {
+	if strings.HasSuffix(p.currentLine, EQUAL) || strings.HasSuffix(p.currentLine, DUBQUAL) {
+		p.currentCard.Photo = EncodedImage(string(p.b64BuffDaddy))
+		p.base64Flag = false
+	} else {
+		p.b64BuffDaddy = append(p.b64BuffDaddy, p.currentLine...)
+		p.NextLine()
+		p.parseBase64()
+	}
+}
+
 func (p *Parser) parseName() {
 	line := strings.Split(p.currentLine, COLON)
+	p.currentCard.FullName = strings.TrimSpace(strings.ReplaceAll(line[1], SEMICOLON, " "))
 	names := strings.Split(line[1], SEMICOLON)
 	for i, name := range names {
 		switch i {
