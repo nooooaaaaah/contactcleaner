@@ -1,14 +1,15 @@
-package contactcleaner
+package parsing
 
 import (
+	"ContactCleaner/contact"
 	"strings"
 	"testing"
 )
 
 // parseTelephone is a mock function for demonstration.
 // Replace this with your actual implementation.
-func parseTelephone(line string) Telephone {
-	var tel Telephone
+func parseTelephone(line string) contact.Telephone {
+	var tel contact.Telephone
 	parts := strings.Split(line, ":")
 	if len(parts) == 2 {
 		tel.Number = parts[1]
