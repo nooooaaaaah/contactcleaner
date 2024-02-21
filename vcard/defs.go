@@ -80,6 +80,8 @@ type Par struct {
 	Val     []string
 }
 
+// Parameters for vCard properties
+//
 //	type Par struct {
 //		Name    ParamName
 //		PosVals []ParamValue
