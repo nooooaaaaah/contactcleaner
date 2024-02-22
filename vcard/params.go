@@ -553,3 +553,38 @@ func (sap *SortAsParam) validate(propCompCount int) error {
 	}
 	return nil
 }
+
+type GeoParam struct {
+	BaseParam
+}
+
+// Creates a new GeoParam with the provided geo value.
+// If the geo value is invalid, an error is returned.
+// https://tools.ietf.org/html/rfc6350#section-5.10
+func NewGeoParam(geo string) (*GeoParam, error) {
+	gp := &GeoParam{
+		BaseParam: BaseParam{
+			Name: GEO_PARAM,
+			Val:  []string{geo},
+		},
+	}
+	if err := gp.validate(); err != nil {
+		return nil, err
+	}
+	return gp, nil
+}
+
+func (gp *GeoParam) validate() error {
+	if len(gp.Val) == 0 {
+		return ErrNilGeo.Error(string(GEO_PARAM))
+	}
+
+	validateGeoParam := func(paramValue ParamVal) bool {
+		var geoRegex = regexp.MustCompile(`^"([^"]+)"$`)
+		return geoRegex.MatchString(string(paramValue))
+	}
+	if !validateGeoParam(ParamVal(gp.Val[0])) {
+		return ErrInvalidGeo.Error(gp.Val[0])
+	}
+	return nil
+}

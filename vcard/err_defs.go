@@ -27,4 +27,6 @@ var (
 	ErrInvalidCalscale  = &err{"Invalid calscale value"}
 	ErrNilSortAs        = &err{"Missing required sort-as value"}
 	ErrInvalidSortAs    = &err{"Invalid sort-as value"}
+	ErrNilGeo           = &err{"Missing required geo value"}
+	ErrInvalidGeo       = &err{"Invalid geo value"}
 )
