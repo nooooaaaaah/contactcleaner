@@ -606,3 +606,579 @@ func (gp *GeoParam) validate() error {
 	}
 	return nil
 }
+
+type TzParam struct {
+	BaseParam
+}
+
+// Creates a new TzParam with the provided tz value.
+// If the tz value is invalid, an error is returned.
+// https://tools.ietf.org/html/rfc6350#section-5.11
+func NewTzParam(tz string) (*TzParam, error) {
+	tp := &TzParam{
+		BaseParam: BaseParam{
+			Name: TZ_PARAM,
+			Val:  []string{tz},
+		},
+	}
+	if err := tp.validate(); err != nil {
+		return nil, err
+	}
+	return tp, nil
+}
+
+func (tp *TzParam) validate() error {
+	if len(tp.Val) == 0 {
+		return ErrNilTz.Error(string(TZ_PARAM))
+	}
+
+	validateTzParam := func(paramValue ParamVal) bool {
+		var paramRegex = regexp.MustCompile(`^[^"]+$`)
+		var uriRegex = regexp.MustCompile(`^"([^"]+)"$`)
+
+		return paramRegex.MatchString(string(paramValue)) || uriRegex.MatchString(string(paramValue))
+	}
+	if !validateTzParam(ParamVal(tp.Val[0])) {
+		return ErrInvalidTz.Error(tp.Val[0])
+	}
+	return nil
+}
+
+type IndexParam struct {
+	BaseParam
+}
+
+// Creates a new IndexParam with the provided index value.
+// If the index value is invalid, an error is returned.
+// https://tools.ietf.org/html/rfc6715#section-3.1
+func NewIndexParam(index string) (*IndexParam, error) {
+	ip := &IndexParam{
+		BaseParam: BaseParam{
+			Name: INDEX_PARAM,
+			Val:  []string{index},
+		},
+	}
+	if err := ip.validate(); err != nil {
+		return nil, err
+	}
+	return ip, nil
+}
+
+func (ip *IndexParam) validate() error {
+	param := ip.Val[0]
+
+	if len(param) == 0 {
+		return ErrNilIndex.Error(string(INDEX_PARAM))
+	}
+
+	var indexRegex = regexp.MustCompile(`^[1-9][0-9]*$`)
+	if !indexRegex.MatchString(param) {
+		return ErrInvalidIndex.Error(param)
+	}
+
+	index, err := strconv.Atoi(param)
+	if err != nil {
+		return ErrInvalidIndex.Error(param)
+	}
+	if index < 1 {
+		return ErrInvalidIndex.Error(param)
+	}
+
+	return nil
+}
+
+type LevelParam struct {
+	BaseParam
+}
+
+// Creates a new LevelParam with the provided level value.
+// If the level value is invalid, an error is returned.
+// https://tools.ietf.org/html/rfc6715#section-3.2
+func NewLevelParam(level string) (*LevelParam, error) {
+	lp := &LevelParam{
+		BaseParam: BaseParam{
+			Name: LEVEL_PARAM,
+			Val:  []string{level},
+		},
+	}
+	if err := lp.validate(); err != nil {
+		return nil, err
+	}
+	return lp, nil
+}
+
+func (lp *LevelParam) validate() error {
+	param := lp.Val[0]
+
+	if len(param) == 0 {
+		return ErrNilLevel.Error(string(LEVEL_PARAM))
+	}
+
+	allowedLevels := map[string]bool{
+		"beginner": true,
+		"average":  true,
+		"expert":   true,
+		"high":     true,
+		"medium":   true,
+		"low":      true,
+	}
+
+	if !allowedLevels[strings.ToLower(param)] {
+		return ErrInvalidLevel.Error(param)
+	}
+
+	return nil
+}
+
+type GroupParam struct {
+	BaseParam
+}
+
+// Creates a new GroupParam with the provided group value.
+// If the group value is invalid, an error is returned.
+// Only use with jCard objects.
+// https://tools.ietf.org/html/rfc7095#section-8.1
+func NewGroupParam(group string) (*GroupParam, error) {
+	gp := &GroupParam{
+		BaseParam: BaseParam{
+			Name: GROUP_PARAM,
+			Val:  []string{group},
+		},
+	}
+	if err := gp.validate(); err != nil {
+		return nil, err
+	}
+	return gp, nil
+}
+
+func (gp *GroupParam) validate() error {
+	param := gp.Val[0]
+	if len(param) == 0 {
+		return ErrNilGroup.Error(string(GROUP_PARAM))
+	}
+
+	for _, char := range gp.Val[0] {
+		if !unicode.IsLetter(char) && !unicode.IsDigit(char) && char != '-' {
+			return ErrInvalidGroup.Error(string(char))
+		}
+	}
+	return nil
+}
+
+type CcParam struct {
+	BaseParam
+}
+
+// Creates a new CcParam with the provided cc value.
+// If the cc value is invalid, an error is returned.
+// https://tools.ietf.org/html/rfc8605#section-3.1
+func NewCcParam(cc string) (*CcParam, error) {
+	cp := &CcParam{
+		BaseParam: BaseParam{
+			Name: CC_PARAM,
+			Val:  []string{cc},
+		},
+	}
+	if err := cp.validate(); err != nil {
+		return nil, err
+	}
+	return cp, nil
+}
+
+func (cp *CcParam) validate() error {
+	param := cp.Val[0]
+	if len(param) == 0 {
+		return ErrNilCc.Error(string(CC_PARAM))
+	}
+
+	validateCcParam := func(paramValue ParamVal) bool {
+		var ccRegex = regexp.MustCompile(`^[A-Z]{2}$`)
+		return ccRegex.MatchString(string(paramValue))
+	}
+	if !validateCcParam(ParamVal(param)) {
+		return ErrInvalidCc.Error(param)
+	}
+	return nil
+}
+
+type AuthorParam struct {
+	BaseParam
+}
+
+// Creates a new AuthorParam with the provided author uri value.
+// If the author value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-author
+func NewAuthorParam(author string) (*AuthorParam, error) {
+	ap := &AuthorParam{
+		BaseParam: BaseParam{
+			Name: AUTHOR_PARAM,
+			Val:  []string{author},
+		},
+	}
+	if err := ap.validate(); err != nil {
+		return nil, err
+	}
+	return ap, nil
+}
+
+func (ap *AuthorParam) validate() error {
+	param := ap.Val[0]
+	if len(param) == 0 {
+		return ErrNilAuthor.Error(string(AUTHOR_PARAM))
+	}
+
+	validateAuthorParam := func(paramValue ParamVal) bool {
+		var uriRegex = regexp.MustCompile(`^".+"$`)
+		return uriRegex.MatchString(string(paramValue))
+	}
+	if !validateAuthorParam(ParamVal(param)) {
+		return ErrInvalidAuthor.Error(param)
+	}
+
+	return nil
+}
+
+type AuthorNameParam struct {
+	BaseParam
+}
+
+// Creates a new AuthorNameParam with the provided author name value.
+// If the author name value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-author-name
+func NewAuthorNameParam(authorName string) (*AuthorNameParam, error) {
+	anp := &AuthorNameParam{
+		BaseParam: BaseParam{
+			Name: AUTHOR_NAME_PARAM,
+			Val:  []string{authorName},
+		},
+	}
+	if err := anp.validate(); err != nil {
+		return nil, err
+	}
+	return anp, nil
+}
+
+func (anp *AuthorNameParam) validate() error {
+	param := anp.Val[0]
+	if len(param) == 0 {
+		return ErrNilAuthorName.Error(string(AUTHOR_NAME_PARAM))
+	}
+
+	validateAuthorNameParam := func(paramValue ParamVal) bool {
+		var anpRegex = regexp.MustCompile(`^"[^"]+"$`)
+		return anpRegex.MatchString(string(paramValue))
+	}
+	if !validateAuthorNameParam(ParamVal(param)) {
+		return ErrInvalidAuthorName.Error(param)
+	}
+
+	return nil
+}
+
+type CreatedParam struct {
+	BaseParam
+}
+
+// Creates a new CreatedParam with the provided created timestamp value.
+// If the created value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-created
+func NewCreatedParam(created string) (*CreatedParam, error) {
+	cp := &CreatedParam{
+		BaseParam: BaseParam{
+			Name: CREATED_PARAM,
+			Val:  []string{created},
+		},
+	}
+	if err := cp.validate(); err != nil {
+		return nil, err
+	}
+	return cp, nil
+}
+
+func (cp *CreatedParam) validate() error {
+	param := cp.Val[0]
+	if len(param) == 0 {
+		return ErrNilCreated.Error(string(CREATED_PARAM))
+	}
+
+	validateCreatedParam := func(paramValue ParamVal) bool {
+		var createdRegex = regexp.MustCompile(`^\d{8}T\d{6}Z$`)
+		return createdRegex.MatchString(string(paramValue))
+	}
+	if !validateCreatedParam(ParamVal(param)) {
+		return ErrInvalidCreated.Error(param)
+	}
+
+	return nil
+}
+
+type DerivedParam struct {
+	BaseParam
+}
+
+// Creates a new DerivedParam with the provided derived timestamp value.
+// If the derived value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-derived
+func NewDerivedParam(derived string) (*DerivedParam, error) {
+	dp := &DerivedParam{
+		BaseParam: BaseParam{
+			Name: DERIVED_PARAM,
+			Val:  []string{derived},
+		},
+	}
+	if err := dp.validate(); err != nil {
+		return nil, err
+	}
+	return dp, nil
+}
+
+func (dp *DerivedParam) validate() error {
+	param := dp.Val[0]
+	if len(param) == 0 {
+		return ErrNilDerived.Error(string(DERIVED_PARAM))
+	}
+
+	validateDerivedParam := func(paramValue string) bool {
+		derived := strings.ToLower(paramValue)
+		return derived == "true" || derived == "false"
+	}
+	if !validateDerivedParam(param) {
+		return ErrInvalidDerived.Error(param)
+	}
+
+	return nil
+}
+
+type LabelParam struct {
+	BaseParam
+}
+
+// Creates a new LabelParam with the provided label value.
+// If the label value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-label
+func NewLabelParam(label string) (*LabelParam, error) {
+	lp := &LabelParam{
+		BaseParam: BaseParam{
+			Name: LABEL_PARAM,
+			Val:  []string{label},
+		},
+	}
+	if err := lp.validate(); err != nil {
+		return nil, err
+	}
+	return lp, nil
+}
+
+func (lp *LabelParam) validate() error {
+	param := lp.Val[0]
+	if len(param) == 0 {
+		return ErrNilLabel.Error(string(LABEL_PARAM))
+	}
+
+	return nil
+}
+
+type PhoneticParam struct {
+	BaseParam
+}
+
+// Creates a new PhoneticParam with the provided phonetic value.
+// If the phonetic value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-phonetic
+func NewPhoneticParam(phonetic string) (*PhoneticParam, error) {
+	pp := &PhoneticParam{
+		BaseParam: BaseParam{
+			Name: PHONETIC_PARAM,
+			Val:  []string{phonetic},
+		},
+	}
+	if err := pp.validate(); err != nil {
+		return nil, err
+	}
+	return pp, nil
+}
+
+func (pp *PhoneticParam) validate() error {
+	param := pp.Val[0]
+	if len(param) == 0 {
+		return ErrNilPhonetic.Error(string(PHONETIC_PARAM))
+	}
+	allowedSystems := map[string]bool{"ipa": true, "piny": true, "jyut": true, "script": true}
+	if !allowedSystems[param] {
+		return ErrInvalidPhonetic.Error(param)
+	}
+
+	return nil
+}
+
+type PropIDParam struct {
+	BaseParam
+}
+
+// Creates a new propParam with the provided prop value.
+// If the prop value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-prop
+func NewPropIDParam(prop string) (*PropIDParam, error) {
+	pp := &PropIDParam{
+		BaseParam: BaseParam{
+			Name: PROP_ID_PARAM,
+			Val:  []string{prop},
+		},
+	}
+	if err := pp.validate(); err != nil {
+		return nil, err
+	}
+	return pp, nil
+}
+
+func (pp *PropIDParam) validate() error {
+	param := pp.Val[0]
+	if len(param) == 0 {
+		return ErrNilPropID.Error(string(PROP_ID_PARAM))
+	}
+
+	validatePropIDParam := func(paramValue ParamVal) bool {
+		var propIDRegex = regexp.MustCompile(`^[A-Za-z0-9\\-_]{1,255}$`)
+		return propIDRegex.MatchString(string(paramValue))
+	}
+	if !validatePropIDParam(ParamVal(param)) {
+		return ErrInvalidPropID.Error(param)
+	}
+
+	return nil
+}
+
+type ScriptParam struct {
+	BaseParam
+}
+
+// Creates a new ScriptParam with the provided script value.
+// If the script value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-script
+func NewScriptParam(script string) (*ScriptParam, error) {
+	sp := &ScriptParam{
+		BaseParam: BaseParam{
+			Name: SCRIPT_PARAM,
+			Val:  []string{script},
+		},
+	}
+	if err := sp.validate(); err != nil {
+		return nil, err
+	}
+	return sp, nil
+}
+
+func (sp *ScriptParam) validate() error {
+	param := sp.Val[0]
+	if len(param) == 0 {
+		return ErrNilScript.Error(string(SCRIPT_PARAM))
+	}
+
+	pattern := regexp.MustCompile(`^[A-Za-z]{4}$`)
+	if !pattern.MatchString(param) {
+		return ErrInvalidScript.Error(param)
+	}
+
+	return nil
+}
+
+type ServiceTypeParam struct {
+	BaseParam
+}
+
+// Creates a new ServiceTypeParam with the provided service type value.
+// If the service type value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-service-type
+func NewServiceTypeParam(serviceType string) (*ServiceTypeParam, error) {
+	stp := &ServiceTypeParam{
+		BaseParam: BaseParam{
+			Name: SERVICE_TYPE_PARAM,
+			Val:  []string{serviceType},
+		},
+	}
+	if err := stp.validate(); err != nil {
+		return nil, err
+	}
+	return stp, nil
+}
+
+func (stp *ServiceTypeParam) validate() error {
+	param := stp.Val[0]
+	if len(param) == 0 {
+		return ErrNilServiceType.Error(string(SERVICE_TYPE_PARAM))
+	}
+	pattern := regexp.MustCompile(`^.*$`)
+	if !pattern.MatchString(param) {
+		return ErrInvalidServiceType.Error(param)
+	}
+
+	return nil
+}
+
+type UsernameParam struct {
+	BaseParam
+}
+
+// Creates a new UsernameParam with the provided username value.
+// If the username value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-username
+func NewUsernameParam(username string) (*UsernameParam, error) {
+	up := &UsernameParam{
+		BaseParam: BaseParam{
+			Name: USERNAME_PARAM,
+			Val:  []string{username},
+		},
+	}
+	if err := up.validate(); err != nil {
+		return nil, err
+	}
+	return up, nil
+}
+
+func (up *UsernameParam) validate() error {
+	param := up.Val[0]
+	if len(param) == 0 {
+		return ErrNilUsername.Error(string(USERNAME_PARAM))
+	}
+
+	pattern := regexp.MustCompile(`^.*$`)
+	if !pattern.MatchString(param) {
+		return ErrInvalidUsername.Error(param)
+	}
+
+	return nil
+}
+
+type JsptrParam struct {
+	BaseParam
+}
+
+// Creates a new JsptrParam with the provided jsptr value.
+// If the jsptr value is invalid, an error is returned.
+// https://www.ietf.org/archive/id/draft-ietf-calext-vcard-jscontact-extensions-11.html#name-jsptr
+func NewJsptrParam(jsptr string) (*JsptrParam, error) {
+	jp := &JsptrParam{
+		BaseParam: BaseParam{
+			Name: JSPTR_PARAM,
+			Val:  []string{jsptr},
+		},
+	}
+	if err := jp.validate(); err != nil {
+		return nil, err
+	}
+	return jp, nil
+}
+
+func (jp *JsptrParam) validate() error {
+	param := jp.Val[0]
+	if len(param) == 0 {
+		return ErrNilJsptr.Error(string(JSPTR_PARAM))
+	}
+
+	pattern := regexp.MustCompile(`^"\/(?:[^\/"]|\\")*\/"$`)
+	if !pattern.MatchString(param) {
+		return ErrInvalidJsptr.Error(param)
+	}
+
+	return nil
+}
